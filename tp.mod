@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*Problema del viajante*/
 
 /*Conjuntos*/
@@ -72,8 +71,6 @@ s.t. seUsaLaCombi2{i in COMBIS}: sum{j in DOMICILIOS} E[i,j] <= 15 * COMB[i];
 s.t. unPasajeroVaEnUnaSolaCombi{j in DOMICILIOS}: sum{i in COMBIS} E[i,j] = 1;
 
 
-# Si j = k Yijk = 0;
-s.t. noVoyDeUnDomicilioAlMismo{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j = k }: Y[i,j,k] = 0;
 
 
 # Cantidad de combis
