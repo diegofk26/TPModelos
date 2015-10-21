@@ -38,18 +38,50 @@ var M{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS} >= 0, integer;
 # Tiempo que tarda la combi i en realizar el recorrido (minutos)
 var T{i in COMBIS} >= 0;
 
+
+#Binaria que dice si uso una combi o no
+var COMB{i in COMBIS} >= 0, binary;
+
+
 /*Funcional*/
 
 # Falta completarlo con los $KM y $COMBIS
-minimize z: sum{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS : j<>k} DISTANCIA[j,k]*Y[i,j,k];
+minimize z: sum{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS : j<>k} DISTANCIA[j,k]*Y[i,j,k] + 100 * C;
+
+
+
 
 /*Restricciones*/
+
+
+
+
+
+#total de combis
+s.t. totalCombis: C = sum{i in COMBIS} COMB[i];
+
+
+#COMB vale 1 si se usa la combi o 0 si no 
+s.t. seUsaLaCombi1{i in COMBIS}: COMB[i] <= sum{j in DOMICILIOS} E[i,j];
+#
+s.t. seUsaLaCombi2{i in COMBIS}: sum{j in DOMICILIOS} E[i,j] <= 15 * COMB[i];
+
+
+
+s.t. unPasajeroVaEnUnaSolaCombi{j in DOMICILIOS}: sum{i in COMBIS} E[i,j] = 1;
+
+
+# Si j = k Yijk = 0;
+s.t. noVoyDeUnDomicilioAlMismo{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j = k }: Y[i,j,k] = 0;
+
 
 # Cantidad de combis
 s.t. cantidadCombis: C <= 3;
 
 # Salgo de todos los domicilios una sola vez. Excluyo el origen.
 s.t. salen{j in DOMICILIOS : j<>'Z'}: sum{i in COMBIS, k in DOMICILIOS: j<>k} Y[i,j,k] = 1;
+
+
 
 # Llego a todos los domicilios una sola vez. Excluyo el origen.
 s.t. llegan{k in DOMICILIOS : k<>'Z'}: sum{i in COMBIS, j in DOMICILIOS : j<>k } Y[i,j,k] = 1;
