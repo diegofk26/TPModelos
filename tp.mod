@@ -30,7 +30,7 @@ var U{i in COMBIS, w in DOMICILIOS: w<>'Z'} >=0, integer;
 var N{i in COMBIS} >= 0, integer;
 
 # Eij binaria. 1 si el empleado j toma la combi i
-var E{i in COMBIS, j in DOMICILIOS} >= 0, binary;
+var E{i in COMBIS, j in DOMICILIOS: j<> 'Z'} >= 0, binary;
 
 # Nij entera. Ni si Yijk = 1, 0 sino.
 var M{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS} >= 0, integer;
@@ -62,13 +62,22 @@ s.t. totalCombis: C = sum{i in COMBIS} COMB[i];
 
 
 #COMB vale 1 si se usa la combi o 0 si no 
-s.t. seUsaLaCombi1{i in COMBIS}: COMB[i] <= sum{j in DOMICILIOS} E[i,j];
-#
-s.t. seUsaLaCombi2{i in COMBIS}: sum{j in DOMICILIOS} E[i,j] <= 15 * COMB[i];
+s.t. seUsaLaCombi1{i in COMBIS}: COMB[i] <= sum{j in DOMICILIOS: j <>'Z'} E[i,j];
+s.t. seUsaLaCombi2{i in COMBIS}: sum{j in DOMICILIOS: j <>'Z'} E[i,j] <= 15 * COMB[i];
 
 
 
-s.t. unPasajeroVaEnUnaSolaCombi{j in DOMICILIOS}: sum{i in COMBIS} E[i,j] = 1;
+s.t. unPasajeroVaEnUnaSolaCombi{j in DOMICILIOS: j <>'Z'}: sum{i in COMBIS} E[i,j] = 1;
+
+
+
+
+
+
+#Relacion entre Eij y las Yijk
+s.t. viajaEnEsaCombi1{i in COMBIS, j in DOMICILIOS: j <>'Z'}: E[i,j] <= sum{k in DOMICILIOS: k<>j} Y[i,j,k];
+s.t. viajaEnEsaCombi2{i in COMBIS, j in DOMICILIOS: j <>'Z'}: sum{k in DOMICILIOS: k<>j} Y[i,j,k] <= E[i,j];
+
 
 
 
