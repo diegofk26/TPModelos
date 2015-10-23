@@ -2,8 +2,6 @@
 
 /*Conjuntos*/
 
-# ¿Z es nuestra empresa, el origen?
-
 set DOMICILIOS;
 set COMBIS;
 
@@ -32,7 +30,7 @@ var N{i in COMBIS} >= 0, integer;
 # Eij binaria. 1 si el empleado j toma la combi i
 var E{i in COMBIS, j in DOMICILIOS: j<> 'Z'} >= 0, binary;
 
-# Nij entera. Ni si Yijk = 1, 0 sino.
+# Mijk entera. Ni si Yijk = 1, 0 sino.
 var M{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS} >= 0, integer;
 
 # Tiempo que tarda la combi i en realizar el recorrido (minutos)
@@ -43,77 +41,83 @@ var T{i in COMBIS} >= 0;
 var COMB{i in COMBIS} >= 0, binary;
 
 
+
+
+
+
 /*Funcional*/
 
-# Falta completarlo con los $KM y $COMBIS
-minimize z: sum{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS : j<>k} DISTANCIA[j,k]*Y[i,j,k] + 100 * C;
+
+minimize z: 100 * C + sum{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS : j<>k} DISTANCIA[j,k]*Y[i,j,k] ;
+
+
 
 
 
 
 /*Restricciones*/
 
+#Un pasajero solo puede ir en una combi
+s.t. unPasajeroVaEnUnaSolaCombi{j in DOMICILIOS: j <>'Z'}: sum{i in COMBIS} E[i,j] = 1;
+
+
+#Relacion entre Eij y las Yijk
+s.t. viajaEnEsaCombi1{i in COMBIS, j in DOMICILIOS: j <>'Z'}: E[i,j] = sum{k in DOMICILIOS: k<>j} Y[i,j,k];
+
+
+#Restriccion de salida a un empleado valido (que pertenece a esa combi)
+s.t. principioDeCadaCombi{i in COMBIS,j in DOMICILIOS: j <>'Z'}: Y[i,'Z',j] <= E[i,j];
+
+
+# Salgo de todos los domicilios una sola vez. Excluyo el origen.
+s.t. salen{j in DOMICILIOS : j<>'Z'}: sum{i in COMBIS, k in DOMICILIOS: j<>k } Y[i,j,k] = 1;
+
+
+# Llego a todos los domicilios una sola vez. Excluyo el origen.
+s.t. llegan{k in DOMICILIOS : k<>'Z'}: sum{i in COMBIS, j in DOMICILIOS : j<>k } Y[i,j,k] = 1;
+
+ 
+# Con cada combi llego al origen una vez si se utiliza la combi
+s.t. restriccionDeLlegadaDeLasCombis{i in COMBIS}: sum{j in DOMICILIOS: j <>'Z'} Y[i,j,'Z'] = COMB[i];
+
+
+
+# Con cada combi salgo del origen hasta una vez si se utiliza la combi
+s.t. restriccionDeSalidaDeLasCombis{i in COMBIS}: sum{k in DOMICILIOS: k <>'Z'} Y[i,'Z',k] = COMB[i];
+
+
+
+#COMB vale 1 si se usa la combi o 0 si no 
+s.t. seUsaLaCombi{i in COMBIS}: COMB[i] <= sum{j in DOMICILIOS: j <>'Z'} E[i,j];
+s.t. seUsaLaCombii{i in COMBIS}: sum{j in DOMICILIOS: j <>'Z'} E[i,j] <= 15 * COMB[i];
 
 
 
 
 #total de combis
-s.t. totalCombis: C = sum{i in COMBIS} COMB[i];
-
-
-#COMB vale 1 si se usa la combi o 0 si no 
-s.t. seUsaLaCombi1{i in COMBIS}: COMB[i] <= sum{j in DOMICILIOS: j <>'Z'} E[i,j];
-s.t. seUsaLaCombi2{i in COMBIS}: sum{j in DOMICILIOS: j <>'Z'} E[i,j] <= 15 * COMB[i];
-
-
-
-s.t. unPasajeroVaEnUnaSolaCombi{j in DOMICILIOS: j <>'Z'}: sum{i in COMBIS} E[i,j] = 1;
-
-
-
-
-
-
-#Relacion entre Eij y las Yijk
-s.t. viajaEnEsaCombi1{i in COMBIS, j in DOMICILIOS: j <>'Z'}: E[i,j] <= sum{k in DOMICILIOS: k<>j} Y[i,j,k];
-s.t. viajaEnEsaCombi2{i in COMBIS, j in DOMICILIOS: j <>'Z'}: sum{k in DOMICILIOS: k<>j} Y[i,j,k] <= E[i,j];
-
-
+s.t. totalCombis: C = sum{i in COMBIS} COMB[i]; # tal vez no es necesaria
 
 
 
 # Cantidad de combis
 s.t. cantidadCombis: C <= 3;
 
-# Salgo de todos los domicilios una sola vez. Excluyo el origen.
-s.t. salen{j in DOMICILIOS : j<>'Z'}: sum{i in COMBIS, k in DOMICILIOS: j<>k} Y[i,j,k] = 1;
 
-
-
-# Llego a todos los domicilios una sola vez. Excluyo el origen.
-s.t. llegan{k in DOMICILIOS : k<>'Z'}: sum{i in COMBIS, j in DOMICILIOS : j<>k } Y[i,j,k] = 1;
-
-# Del origen salgo a C domicilios
-s.t. aDomicilios: sum{i in COMBIS, k in DOMICILIOS : k<>'Z'} Y[i,'Z',k] = C;
-
-# Con cada combi salgo del origen hasta una vez
-s.t. salenOrigen{i in COMBIS}: sum{k in DOMICILIOS : k<>'Z'} Y[i,'Z',k] <= 1;
-
-# Al origen llego C veces
-s.t. desdeDomicilios: sum{i in COMBIS, j in DOMICILIOS : j<>'Z'} Y[i,j,'Z'] = C;
-
-# Con cada combi llego al origen hasta una vez
-s.t. lleganOrigen{i in COMBIS}: sum{j in DOMICILIOS : j<>'Z'} Y[i,j,'Z'] <= 1;
 
 # Relación entre la cantidad de pasajeros y la bivalente E
 s.t. relacionPasajeros{i in COMBIS}: sum{j in DOMICILIOS : j<>'Z'} E[i,j] = N[i];
 
+
+
 # Cantidad máxima de pasajeros por combi i
 s.t. pasajeros{i in COMBIS}: N[i] <= 15;
+
 
 # Definición de Nijk
 # Si Yijk = 0 entonces Nijk = 0 
 s.t. defNijk1{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j<>k}: M[i,j,k] <= 15 * Y[i,j,k];
+
+
 # Yijk = 1 entonces Nijk = Ni 
 s.t. defNijk2{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j<>k}: N[i] - 15*(1-Y[i,j,k]) <= M[i,j,k];
 s.t. defNijk3{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j<>k}: M[i,j,k] <= N[i];
@@ -121,20 +125,27 @@ s.t. defNijk3{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j<>k}: M[i,j,k] <= 
 # Elimino subtours
 s.t. eliminoSubTours{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j<>k and j<>'Z' and k<>'Z'}: U[i,j] - U[i,k] +M[i,j,k] <= N[i] - 1 + 15 * (1-E[i,j]) + 15 * (1-E[i,k]);
 
-
 # Rango de Uij. Si pertenece va de 1 a Ni si no es 0
 s.t. rango1{i in COMBIS, j in DOMICILIOS: j<>'Z'}: 1 - (1-E[i,j]) <= U[i,j];
 s.t. rango2{i in COMBIS, j in DOMICILIOS: j<>'Z'}: U[i,j] <= N[i];
 s.t. rango3{i in COMBIS, j in DOMICILIOS: j<>'Z'}: U[i,j] <= 15 * E[i,j];
 
+
 # Si j y k no pertenecen a la combi Yijk es igual a 0
 s.t. jykNoPertenecenAlaMismaCombi{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS: j<>k and j<>'Z' and k <>'Z'}: Y[i,j,k] <= ( E[i,j] + E[i,k] ) / 2;
 
+
 # Cálculo del tiempo
-s.t. calculoTiempo{i in COMBIS}: sum{j in DOMICILIOS, k in DOMICILIOS : j<>k} TIEMPO[j,k]*Y[i,j,k] = T[i];
+s.t. calculoTiempo{i in COMBIS}: sum{j in DOMICILIOS, k in DOMICILIOS : j<>k and j<>'Z'} TIEMPO[j,k]*Y[i,j,k] = T[i];
+
 
 # El tiempo no puede exceder las dos horas
 s.t. tiempo{i in COMBIS}: T[i] <= 120;
+
+
+
+
+
 
 solve;
 

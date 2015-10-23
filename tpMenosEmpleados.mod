@@ -70,10 +70,6 @@ minimize z: 100 * C + sum{i in COMBIS, j in DOMICILIOS, k in DOMICILIOS : j<>k} 
 s.t. unPasajeroVaEnUnaSolaCombi{j in DOMICILIOS: j <>'Z'}: sum{i in COMBIS} E[i,j] = 1;
 
 
-s.t. restriccionDeSalidaDeLasCombis{i in COMBIS}: sum{k in DOMICILIOS: k <>'Z'} Y[i,'Z',k] = COMB[i];
-
-s.t. restriccionDeLlegadaDeLasCombis{i in COMBIS}: sum{j in DOMICILIOS: j <>'Z'} Y[i,j,'Z'] = COMB[i];
-
 
 
 
@@ -105,8 +101,21 @@ s.t. llegan{k in DOMICILIOS : k<>'Z'}: sum{i in COMBIS, j in DOMICILIOS : j<>k }
 
 
 
+ 
+# Con cada combi llego al origen una vez si se utiliza la combi
+s.t. restriccionDeLlegadaDeLasCombis{i in COMBIS}: sum{j in DOMICILIOS: j <>'Z'} Y[i,j,'Z'] = COMB[i];
 
 
+
+
+
+
+
+
+
+
+# Con cada combi salgo del origen hasta una vez si se utiliza la combi
+s.t. restriccionDeSalidaDeLasCombis{i in COMBIS}: sum{k in DOMICILIOS: k <>'Z'} Y[i,'Z',k] = COMB[i];
 
 
 
@@ -145,8 +154,7 @@ s.t. aDomicilios: sum{i in COMBIS, k in DOMICILIOS : k<>'Z'} Y[i,'Z',k] = C;
 
 
 
-# Con cada combi salgo del origen hasta una vez
-s.t. salenOrigen{i in COMBIS}: sum{k in DOMICILIOS : k<>'Z'} Y[i,'Z',k] <= COMB[i];
+
 
 
 
@@ -159,8 +167,6 @@ s.t. desdeDomicilios: sum{i in COMBIS, j in DOMICILIOS : j<>'Z'} Y[i,j,'Z'] = C;
 
 
 
-# Con cada combi llego al origen hasta una vez
-s.t. lleganOrigen{i in COMBIS}: sum{j in DOMICILIOS : j<>'Z'} Y[i,j,'Z'] <= COMB[i];
 
 
 
@@ -271,7 +277,7 @@ end;
 
 */
 
-
+/*
 data;
 
 set DOMICILIOS := A B C D E F G H I J K L M N O P Q Z;
@@ -325,7 +331,7 @@ end;
 
 
 
-
+*/
 
 
 /*Data segment
